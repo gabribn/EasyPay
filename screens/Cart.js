@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { View, ScrollView, FlatList, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  ScrollView,
+  FlatList,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  Alert,
+} from "react-native";
 import NavBar from "../components/NavBar";
 import Footer from "../components/Footer";
 import { useCart } from "../context/CartContext";
@@ -7,54 +16,57 @@ import { useCart } from "../context/CartContext";
 const CartScreen = ({ navigation }) => {
   const { cart, setCart } = useCart();
   const [paymentMethodVisible, setPaymentMethodVisible] = useState(false);
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(""); // Estado para o método de pagamento
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("");
 
   const handleRemoveFromCart = (productId) => {
-    setCart((prevCart) => prevCart.filter(item => item.id !== productId));
+    setCart((prevCart) => prevCart.filter((item) => item.id !== productId));
   };
 
   const handleQuantityChange = (productId, operation) => {
-    setCart((prevCart) => 
-      prevCart.map(item => 
-        item.id === productId 
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.id === productId
           ? {
               ...item,
-              quantity: operation === 'increase' 
-                ? item.quantity + 1 
-                : item.quantity > 1 
-                  ? item.quantity - 1 
-                  : item.quantity 
-          }
+              quantity:
+                operation === "increase"
+                  ? item.quantity + 1
+                  : item.quantity > 1
+                  ? item.quantity - 1
+                  : item.quantity,
+            }
           : item
       )
     );
   };
 
   const handlePaymentMethodSelect = (method) => {
-    setSelectedPaymentMethod(method); 
+    setSelectedPaymentMethod(method);
     setPaymentMethodVisible(false);
   };
 
   const renderCartItem = ({ item }) => {
     const totalItemPrice = item.valor * item.quantity;
-    return(
+    return (
       <View style={styles.cartItem}>
         <Image source={item.imagem} style={styles.productImage} />
         <View style={styles.productInfo}>
           <Text style={styles.productName}>{item.nome}</Text>
-          <Text style={styles.productPrice}>R${totalItemPrice.toFixed(2)}</Text>
+          <Text style={styles.productPrice}>
+            R${totalItemPrice.toFixed(2)}
+          </Text>
         </View>
         <View style={styles.quantityContainer}>
-          <TouchableOpacity 
-            style={styles.decreaseButton} 
-            onPress={() => handleQuantityChange(item.id, 'decrease')}
+          <TouchableOpacity
+            style={styles.decreaseButton}
+            onPress={() => handleQuantityChange(item.id, "decrease")}
           >
             <Text style={styles.buttonText}>-</Text>
           </TouchableOpacity>
           <Text style={styles.quantityText}>{item.quantity}</Text>
-          <TouchableOpacity 
-            style={styles.increaseButton} 
-            onPress={() => handleQuantityChange(item.id, 'increase')}
+          <TouchableOpacity
+            style={styles.increaseButton}
+            onPress={() => handleQuantityChange(item.id, "increase")}
           >
             <Text style={styles.buttonText}>+</Text>
           </TouchableOpacity>
@@ -66,39 +78,71 @@ const CartScreen = ({ navigation }) => {
     );
   };
 
-  const totalPrice = cart.reduce((total, item) => total + item.valor * item.quantity, 0);
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.valor * item.quantity,
+    0
+  );
 
   return (
     <View style={styles.container}>
       <NavBar />
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.totalAndPayment}>
           <View style={styles.paymentMethodContainer}>
-            <TouchableOpacity 
-              style={styles.toggleButton} 
+            <TouchableOpacity
+              style={styles.toggleButton}
               onPress={() => setPaymentMethodVisible(!paymentMethodVisible)}
             >
               <Text style={styles.buttonText}>
-                {selectedPaymentMethod ? `${selectedPaymentMethod}` : (paymentMethodVisible ? "Ocultar" : "Método de Pagamento")}
+                {selectedPaymentMethod
+                  ? `${selectedPaymentMethod}`
+                  : paymentMethodVisible
+                  ? "Ocultar"
+                  : "Método de Pagamento"}
               </Text>
             </TouchableOpacity>
             {paymentMethodVisible && (
               <View style={styles.paymentMethods}>
-                <TouchableOpacity onPress={() => handlePaymentMethodSelect('Cartão de Crédito')}>
+                <TouchableOpacity
+                  onPress={() => handlePaymentMethodSelect("Cartão de Crédito")}
+                >
                   <Text style={styles.paymentOption}>Cartão de Crédito</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handlePaymentMethodSelect('Cartão de Débito')}>
+                <TouchableOpacity
+                  onPress={() => handlePaymentMethodSelect("Cartão de Débito")}
+                >
                   <Text style={styles.paymentOption}>Cartão de Débito</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => handlePaymentMethodSelect('Pix')}>
+                <TouchableOpacity
+                  onPress={() => handlePaymentMethodSelect("Pix")}
+                >
                   <Text style={styles.paymentOption}>Pix</Text>
                 </TouchableOpacity>
               </View>
             )}
           </View>
           <View style={styles.totalContainer}>
-            <Text style={styles.totalText}>Total: R${totalPrice.toFixed(2)}</Text>
-            <TouchableOpacity style={styles.checkoutButton} onPress={() => navigation.navigate('Payment')}>
+            <Text style={styles.totalText}>
+              Total: R${totalPrice.toFixed(2)}
+            </Text>
+            <TouchableOpacity
+              style={styles.checkoutButton}
+              onPress={() => {
+                if (cart.length === 0) {
+                  Alert.alert(
+                    "Carrinho vazio",
+                    "Adicione produtos ao carrinho antes de continuar.",
+                    [{ text: "OK" }]
+                  );
+                } else {
+                  navigation.navigate("Processing");
+                }
+              }}
+            >
               <Text style={styles.checkoutButtonText}>Ir para Pagamento</Text>
             </TouchableOpacity>
           </View>
@@ -134,6 +178,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontSize: 18,
     color: "#999",
+    marginTop: 20,
   },
   cartItem: {
     flexDirection: "row",
@@ -166,19 +211,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   increaseButton: {
-    backgroundColor: "#28a745", 
-    width: 30, 
+    backgroundColor: "#28a745",
+    width: 30,
     height: 30,
-    borderRadius: 8, 
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 5,
   },
   decreaseButton: {
-    backgroundColor: "#dc3545", 
-    width: 30, 
+    backgroundColor: "#dc3545",
+    width: 30,
     height: 30,
-    borderRadius: 8, 
+    borderRadius: 8,
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 5,
@@ -206,7 +251,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f1f1",
     borderRadius: 10,
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
@@ -232,7 +277,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     padding: 15,
     borderRadius: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
